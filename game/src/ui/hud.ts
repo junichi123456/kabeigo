@@ -22,6 +22,7 @@ export class Hud {
   private scoresBox = document.getElementById('hud-scores')!;
   private turn = q('hud-turn');
   private confirm = document.getElementById('confirm-button') as HTMLButtonElement;
+  private confirmLabel = document.getElementById("confirm-label")!;
   private cancel = document.getElementById('cancel-button') as HTMLButtonElement;
   private banner = document.getElementById('turn-banner')!;
   private toastEl = document.getElementById('toast')!;
@@ -48,7 +49,8 @@ export class Hud {
       br.classList.toggle('used', !!used);
     }
     this.turn.textContent = `手数 ${s.turnCount} / ${MAX_TURNS}`;
-    this.confirm.textContent = m.confirmLabel;
+    this.confirmLabel.textContent = m.confirmLabel;
+    this.confirm.classList.toggle("break", m.confirmLabel !== "確定");
     this.confirm.disabled = m.busy || !m.confirmEnabled;
     this.cancel.style.visibility = m.showCancel ? "visible" : "hidden";
     this.cancel.disabled = m.busy;

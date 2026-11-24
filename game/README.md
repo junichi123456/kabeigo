@@ -39,7 +39,7 @@
 ```
 src/logic/    純粋ロジック(three / DOM / window / Math.random / Date.now / localStorage を参照しない。purity.test.ts で検証)
 src/render/   Three.js 描画(盤・駒・壁・ハイライト・海賊船の卓上背景・アニメ)。animMath.ts は純粋関数
-src/ui/       DOM + CSS の画面(タイトル・HUD・結果・ルール)
+src/ui/       DOM + CSS の画面(タイトル・HUD・結果・ルール)。確定ボタンは public/assets/confirm-button.png(ドライブのアセット「かくていボタン.png」)
 src/app/      コントローラ(入力 → ロジック → 描画の調停)、設定(localStorage)
 src/testHooks.ts  window.__HANG__
 tests/unit/   Vitest      tests/e2e/  Playwright

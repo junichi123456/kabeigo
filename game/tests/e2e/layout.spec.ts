@@ -36,7 +36,7 @@ test('E11 layout: board fits, HUD does not overlap canvas, no page scroll', asyn
     // 確定・キャンセルがビューポート内に収まり、折り返しで巨大化していない
     expect(info.confirm.b, `confirm inside viewport ${tag}`).toBeLessThanOrEqual(info.ih);
     expect(info.confirm.r - info.confirm.l, `confirm width ${tag}`).toBeGreaterThanOrEqual(140);
-    expect(info.confirm.b - info.confirm.t, `confirm height ${tag}`).toBeLessThanOrEqual(100);
+    expect(info.confirm.b - info.confirm.t, `confirm height ${tag}`).toBeLessThanOrEqual(112);
     expect(info.cancel.b - info.cancel.t, `cancel height ${tag}`).toBeLessThanOrEqual(60);
     await page.screenshot({ path: `test-results/screens/layout-${tag}-${test.info().project.name}.png` });
   }
