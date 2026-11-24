@@ -8,3 +8,4 @@ export * from './regions';
 export * from './scoring';
 export * from './turn';
 export * from './serialize';
+export * from './cpu';

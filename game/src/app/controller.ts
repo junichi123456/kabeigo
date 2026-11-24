@@ -1,4 +1,4 @@
-import { applyMove, applyWall, computeScores, createGame, deserialize, legalMovesForPiece, legalPlacementCells, movablePieceIds, placeSquare, representativeMoves, wallOptions } from '../logic';
+import { applyMove, applyWall, chooseCpuPlacement, chooseCpuTurn, computeScores, createGame, deserialize, legalMovesForPiece, legalPlacementCells, movablePieceIds, placeSquare, representativeMoves, wallOptions } from '../logic';
 import type { ActionResult, Cell, Edge, GameConfig, GameEvent, GameState, Move } from '../logic';
 import { edgeEq } from '../logic/board';
 import type { Animator } from '../render/animator';
@@ -12,6 +12,7 @@ import { TURN_BANNER_MS } from '../render/animMath';
 import type { CameraRig } from '../render/camera';
 import { isMobileView } from './device';
 import { isTap, snapCell } from './hitTest';
+import { makeRng } from './rng';
 
 const sameCell = (a: Cell | null, b: Cell | null) => !!a && !!b && a.x === b.x && a.y === b.y;
 
@@ -25,6 +26,11 @@ export class Controller {
   private playing = false;
   private overlay: Overlay = emptyOverlay();
   private active = false;
+  // --- CPU 対戦 ---
+  private cpu: boolean[] = [];
+  private cpuTimer = 0;
+  private cpuWall: Edge | null = null;
+  private rng = makeRng();
 
   constructor(
     private view: BoardView, private picker: Picker, private animator: Animator, private hud: Hud,
@@ -44,23 +50,31 @@ export class Controller {
     document.getElementById('cancel-button')!.addEventListener('click', () => this.onCancel());
   }
 
-  isBusy(): boolean { return this.playing || this.animator.isBusy(); }
+  /** 入力を受け付けない状態: アニメ中、または CPU の手番(考え中を含む) */
+  isBusy(): boolean { return this.playing || this.animator.isBusy() || this.cpuSeat(); }
+  private cpuSeat(): boolean { return this.active && this.state.phase !== 'finished' && !!this.cpu[this.state.currentPlayer]; }
+  get cpuSeats(): boolean[] { return [...this.cpu]; }
   getSelection(): Selection { return { ...this.sel }; }
   getOverlay(): Overlay { return this.overlay; }
 
   /* ---------- ゲーム開始・読込 ---------- */
-  startGame(config: GameConfig): void {
+  startGame(config: GameConfig, cpu: boolean[] = []): void {
     this.config = config;
+    this.cpu = cpu;
     this.load(createGame(config), true);
   }
 
-  loadState(input: string | GameState): void {
+  loadState(input: string | GameState, cpu: boolean[] = []): void {
     const s = typeof input === 'string' ? deserialize(input) : (structuredClone(input) as GameState);
     this.config = s.config;
+    this.cpu = cpu;
     this.load(s, false);
   }
 
   private load(s: GameState, banner: boolean): void {
+    window.clearTimeout(this.cpuTimer);
+    this.cpuTimer = 0;
+    this.cpuWall = null;
     this.state = s;
     this.playing = false;
     this.active = true;
@@ -72,9 +86,10 @@ export class Controller {
     this.cameraForTurn();
     if (s.phase === 'finished') this.result.show(s);
     else if (banner) this.showTurnBanner(s.currentPlayer);
+    this.scheduleCpu();
   }
 
-  stop(): void { this.active = false; this.playing = false; this.result.hide(); this.rig.setMode('oblique', false); }
+  stop(): void { this.active = false; this.playing = false; window.clearTimeout(this.cpuTimer); this.cpuTimer = 0; this.result.hide(); this.rig.setMode('oblique', false); }
 
   /** スマホ表示では、手番の間は真上からの見下ろし(1.2 秒で移動)。終局後は斜め俯瞰に戻す。 */
   private cameraForTurn(): void {
@@ -157,6 +172,34 @@ export class Controller {
     const turns = events.filter((e): e is Extract<GameEvent, { type: 'turnStarted' }> => e.type === 'turnStarted');
     if (turns.length && next.phase !== 'finished') this.showTurnBanner(turns[turns.length - 1]!.player);
     if (next.phase === 'finished') this.result.show(next);
+    this.scheduleCpu();
+  }
+
+  /* ---------- CPU の手番 ---------- */
+  private scheduleCpu(): void {
+    if (!this.cpuSeat() || this.playing || this.cpuTimer) return;
+    // 手番バナーとカメラ移動を見せてから指す(移動 → 壁の 2 段階で、各段の後に間を置く)
+    const delay = this.state.phase === 'wall' ? 450 : 900;
+    this.cpuTimer = window.setTimeout(() => { this.cpuTimer = 0; void this.runCpu(); }, delay);
+  }
+
+  private async runCpu(): Promise<void> {
+    if (!this.cpuSeat() || this.playing) return;
+    const s = this.state;
+    let r: ActionResult | null = null;
+    if (s.phase === 'placement') r = placeSquare(s, chooseCpuPlacement(s, this.rng));
+    else if (s.phase === 'move') {
+      const t = chooseCpuTurn(s, this.rng);
+      this.cpuWall = t.wall;
+      r = applyMove(s, t.move);
+    } else if (s.phase === 'wall' && s.pendingWall) {
+      const opts = wallOptions(s, s.pendingWall.cell);
+      const e = this.cpuWall && opts.some((o) => edgeEq(o, this.cpuWall)) ? this.cpuWall : opts[0]!;
+      this.cpuWall = null;
+      r = applyWall(s, e);
+    }
+    if (!r || !r.ok) { this.refresh(); return; }
+    await this.commit(r.state, r.events);
   }
 
   private showTurnBanner(player: number): void {
@@ -175,7 +218,9 @@ export class Controller {
     let confirmEnabled = false;
     let confirmLabel = '確定';
     let showCancel = false;
-    const busy = this.playing;
+    const cpuTurn = this.cpuSeat();
+    const busy = this.playing || cpuTurn;
+    if (cpuTurn && !this.playing) phaseText = `${s.config.playerNames[s.currentPlayer]}が考えています…`;
     if (!busy) {
       if (s.phase === 'placement') {
         o.placeCells = legalPlacementCells(s);

@@ -22,8 +22,8 @@ export { expect };
 
 export const fixture = (name: string): string => readFileSync(join(fileURLToPath(new URL('.', import.meta.url)), 'fixtures', name), 'utf8');
 
-export async function openApp(page: Page): Promise<void> {
-  await page.goto('/?test=1');
+export async function openApp(page: Page, extraQuery = ''): Promise<void> {
+  await page.goto(`/?test=1${extraQuery}`);
   await expect(page.getByTestId('title-screen')).toBeVisible();
 }
 

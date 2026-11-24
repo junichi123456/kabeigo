@@ -25,8 +25,8 @@ test('E8/E9 finish by separation, result screen, restart and back to title', asy
   await expect(page.getByTestId('result-screen')).toBeHidden();
   const s2 = await getState(page);
   expect(s2.phase).toBe('placement');
-  expect(s2.placementQueue).toEqual([0, 1, 0, 1]);
-  expect(s2.pieces).toHaveLength(4);
+  expect(s2.placementQueue).toEqual([0, 1]);
+  expect(s2.pieces).toHaveLength(2);
   // タイトルへ(メニュー経由 + 確認ダイアログ)
   await page.getByTestId('menu-button').click();
   await page.getByTestId('menu-title').click();

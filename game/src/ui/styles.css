@@ -137,3 +137,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid #fff; outline-off
   #confirm-button.break:not(:disabled) img { animation: none; filter: sepia(1) saturate(9) hue-rotate(-38deg) brightness(1.2) drop-shadow(0 0 10px #ffb74d); }
   #turn-banner .b { animation: banner-fade .9s linear both; }
 }
+
+/* 対戦相手の選択(対人 / CPU) */
+.seg button small { display: block; font-size: 11px; font-weight: 400; opacity: .8; margin-top: 2px; }
+.hint { margin: 0; font-size: 12px; opacity: .75; text-align: left; }

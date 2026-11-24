@@ -3,7 +3,7 @@ import { expect, openApp, placeSquareAt, startGame, tapAt, tapCell, test } from 
 import type { HangTestHooks } from '../../src/testHooks';
 
 type H = HangTestHooks;
-const SQ = [{ x: 0, y: 0 }, { x: 8, y: 0 }, { x: 0, y: 8 }, { x: 8, y: 8 }];
+const SQ = [{ x: 0, y: 0 }, { x: 8, y: 0 }];
 const size = async (page: Page, id: string) => (await page.getByTestId(id).boundingBox())!;
 
 test('E15 touch targets: buttons are at least 44x44 CSS px (title and in-game)', async ({ page }) => {
@@ -29,29 +29,29 @@ test('E15 touch targets: buttons are at least 44x44 CSS px (title and in-game)',
 test('E15 snapping: a tap just outside a highlighted target still selects it', async ({ page }) => {
   await startGame(page, 2);
   for (const c of SQ) await placeSquareAt(page, c);
-  await tapCell(page, { x: 6, y: 2 });             // 〇を選択 → (6,1) などが移動先
+  await tapCell(page, { x: 2, y: 6 });             // 〇を選択 → (6,1) などが移動先
   const pos = await page.evaluate(() => {
     const h = (window as unknown as { __HANG__: H }).__HANG__;
-    return { t: h.cellToScreen(6, 1), above: h.cellToScreen(6, 0), cells: h.getHighlights().cells };
+    return { t: h.cellToScreen(2, 5), above: h.cellToScreen(2, 4), cells: h.getHighlights().cells };
   });
-  expect(pos.cells.some((c) => c.x === 6 && c.y === 1)).toBe(true);
-  expect(pos.cells.some((c) => c.x === 6 && c.y === 0)).toBe(false);   // (6,0) は移動先ではない
-  // (6,1) の中心から (6,0) 方向へ 0.6 マス分ずらした点(= 隣の非候補セルの内側)をタップ
+  expect(pos.cells.some((c) => c.x === 2 && c.y === 5)).toBe(true);
+  expect(pos.cells.some((c) => c.x === 2 && c.y === 4)).toBe(false);   // (2,4) は移動先ではない
+  // (2,5) の中心から (2,4) 方向へ 0.6 マス分ずらした点(= 隣の非候補セルの内側)をタップ
   await tapAt(page, { x: pos.t.x + (pos.above.x - pos.t.x) * 0.6, y: pos.t.y + (pos.above.y - pos.t.y) * 0.6 });
   const sel = await page.evaluate(() => (window as unknown as { __HANG__: H }).__HANG__.getSelection());
   expect(sel.pieceId).toBe('p0-c0');
-  expect(sel.target).toEqual({ x: 6, y: 1 });
+  expect(sel.target).toEqual({ x: 2, y: 5 });
 });
 
 test('E15 wall edge: tapping on the far side of the moved piece still picks the nearest candidate', async ({ page }) => {
   await startGame(page, 2);
   for (const c of SQ) await placeSquareAt(page, c);
-  await tapCell(page, { x: 6, y: 2 });
-  await tapCell(page, { x: 6, y: 1 });
+  await tapCell(page, { x: 2, y: 6 });
+  await tapCell(page, { x: 2, y: 5 });
   await page.getByTestId('confirm-button').click();
   await page.waitForFunction(() => (window as unknown as { __HANG__: H }).__HANG__.getState().phase === 'wall');
   await page.waitForFunction(() => !(window as unknown as { __HANG__: H }).__HANG__.isBusy() && !(window as unknown as { __HANG__: H }).__HANG__.getCamera().moving);
-  const p = await page.evaluate(() => (window as unknown as { __HANG__: H }).__HANG__.cellToScreen(6, 1));
+  const p = await page.evaluate(() => (window as unknown as { __HANG__: H }).__HANG__.cellToScreen(2, 5));
   await tapAt(page, p); // 駒のマスの中心(どの辺にも触れていない場所)
   const sel = await page.evaluate(() => (window as unknown as { __HANG__: H }).__HANG__.getSelection());
   expect(sel.edge).not.toBeNull();
@@ -61,8 +61,8 @@ test('E15 reduced motion: no looping animation on the confirm button', async ({ 
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await startGame(page, 2);
   for (const c of SQ) await placeSquareAt(page, c);
-  await tapCell(page, { x: 6, y: 2 });
-  await tapCell(page, { x: 6, y: 1 });
+  await tapCell(page, { x: 2, y: 6 });
+  await tapCell(page, { x: 2, y: 5 });
   await expect(page.getByTestId('confirm-button')).toBeEnabled();
   const name = await page.evaluate(() => getComputedStyle(document.querySelector('#confirm-button img')!).animationName);
   expect(name).toBe('none');

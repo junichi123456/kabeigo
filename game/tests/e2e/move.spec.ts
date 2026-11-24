@@ -2,7 +2,7 @@ import { applyMove, legalMovesForPiece, representativeMoves } from '../../src/lo
 import { expect, getState, placeSquareAt, shot, startGame, tapCell, tapEdge, test, waitIdle } from './helpers';
 import type { Page } from '@playwright/test';
 
-const SQ = [{ x: 0, y: 0 }, { x: 8, y: 0 }, { x: 0, y: 8 }, { x: 8, y: 8 }];
+const SQ = [{ x: 0, y: 0 }, { x: 8, y: 0 }];
 async function toMovePhase(page: Page) {
   await startGame(page, 2);
   for (const c of SQ) await placeSquareAt(page, c);
@@ -14,7 +14,7 @@ const anims = (page: Page) => page.evaluate(() => (window as unknown as { __HANG
 test('E3 select circle: highlights match representative moves', async ({ page }) => {
   await toMovePhase(page);
   const s = await getState(page);
-  await tapCell(page, { x: 6, y: 2 });
+  await tapCell(page, { x: 2, y: 6 });
   expect((await sel(page)).pieceId).toBe('p0-c0');
   const reps = representativeMoves(legalMovesForPiece(s, 'p0-c0'));
   const expected = reps.map((m) => `${m.path.at(-1)!.x},${m.path.at(-1)!.y}`).sort();
@@ -26,9 +26,9 @@ test('E3 select circle: highlights match representative moves', async ({ page })
 
 test('E4/E5/E6 move animation, input lock, wall placement', async ({ page }) => {
   await toMovePhase(page);
-  await tapCell(page, { x: 6, y: 2 });
-  await tapCell(page, { x: 6, y: 1 }); // 移動先を選択(1 回目)
-  expect((await sel(page)).target).toEqual({ x: 6, y: 1 });
+  await tapCell(page, { x: 2, y: 6 });
+  await tapCell(page, { x: 2, y: 5 }); // 移動先を選択(1 回目)
+  expect((await sel(page)).target).toEqual({ x: 2, y: 5 });
   await page.getByTestId('confirm-button').click();
   // E5: アニメ中は入力を無視し、確定ボタンは disabled
   expect(await page.evaluate(() => (window as unknown as { __HANG__: { isBusy(): boolean } }).__HANG__.isBusy())).toBe(true);
@@ -71,7 +71,7 @@ test('E4/E5/E6 move animation, input lock, wall placement', async ({ page }) => 
 
 test('cancel clears the selection', async ({ page }) => {
   await toMovePhase(page);
-  await tapCell(page, { x: 6, y: 2 });
+  await tapCell(page, { x: 2, y: 6 });
   await expect(page.getByTestId('cancel-button')).toBeVisible();
   await page.getByTestId('cancel-button').click();
   expect((await sel(page)).pieceId).toBeNull();

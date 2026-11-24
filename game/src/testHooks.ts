@@ -8,7 +8,7 @@ import type { CameraRig } from './render/camera';
 
 export interface HangTestHooks {
   getState(): GameState;
-  loadState(json: string | GameState): void;
+  loadState(json: string | GameState, cpu?: boolean[]): void;
   cellToScreen(x: number, y: number): { x: number; y: number };
   edgeToScreen(e: Edge): { x: number; y: number };
   getHighlights(): { cells: Cell[]; breakCells: Cell[]; edges: Edge[] };
@@ -23,10 +23,10 @@ export function hooksEnabled(): boolean {
   return import.meta.env.DEV || new URLSearchParams(location.search).get('test') === '1';
 }
 
-export function installHooks(ctrl: Controller, picker: Picker, animator: Animator, rig: CameraRig, loadIntoGame: (s: string | GameState) => void): void {
+export function installHooks(ctrl: Controller, picker: Picker, animator: Animator, rig: CameraRig, loadIntoGame: (s: string | GameState, cpu?: boolean[]) => void): void {
   const hooks: HangTestHooks = {
     getState: () => structuredClone(ctrl.state),
-    loadState: (j) => loadIntoGame(j),
+    loadState: (j, cpu) => loadIntoGame(j, cpu),
     cellToScreen: (x, y) => picker.worldToPage(cellToWorld({ x, y })),
     edgeToScreen: (e) => { const m = edgeMid(e); return picker.worldToPage(new THREE.Vector3(m.x, 0, m.z)); },
     getHighlights: () => {

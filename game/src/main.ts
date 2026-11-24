@@ -1,5 +1,5 @@
 import './ui/styles.css';
-import type { GameConfig, GameState } from './logic';
+import type { GameState } from './logic';
 import { Controller } from './app/controller';
 import { Animator } from './render/animator';
 import { BoardView } from './render/boardView';
@@ -12,13 +12,14 @@ import { Hud } from './ui/hud';
 import { ResultScreen } from './ui/resultScreen';
 import { RulesModal } from './ui/rulesModal';
 import { TitleScreen } from './ui/titleScreen';
+import type { GameSetup } from './ui/titleScreen';
 
 const gameScreen = document.getElementById('game-screen')!;
 const rules = new RulesModal();
 const hud = new Hud();
 let ctrl: Controller | null = null;
 let stage: Stage | null = null;
-let lastConfig: GameConfig | null = null;
+let lastSetup: GameSetup | null = null;
 
 function ensureRuntime(): boolean {
   if (ctrl) return true;
@@ -32,7 +33,7 @@ function ensureRuntime(): boolean {
   const picker = new Picker(stage.camera, stage.canvas);
   stage.onFrame((now) => { animator.tick(now); view.tick(now); });
   ctrl = new Controller(view, picker, animator, hud, result, stage.canvas, stage.rig);
-  if (hooksEnabled()) installHooks(ctrl, picker, animator, stage.rig, (s) => enterGame(() => ctrl!.loadState(s)));
+  if (hooksEnabled()) installHooks(ctrl, picker, animator, stage.rig, (s, cpu) => enterGame(() => ctrl!.loadState(s, cpu)));
   return true;
 }
 
@@ -52,11 +53,11 @@ function toTitle(): void {
 }
 
 const result = new ResultScreen(
-  () => { if (lastConfig) enterGame(() => ctrl!.startGame(lastConfig!)); },
+  () => { if (lastSetup) enterGame(() => ctrl!.startGame(lastSetup!.config, lastSetup!.cpu)); },
   toTitle,
 );
 const title = new TitleScreen(
-  (cfg) => { lastConfig = cfg; enterGame(() => ctrl!.startGame(cfg)); },
+  (setup) => { lastSetup = setup; enterGame(() => ctrl!.startGame(setup.config, setup.cpu)); },
   () => rules.show(true),
 );
 

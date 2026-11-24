@@ -43,6 +43,10 @@ describe('random play always terminates', () => {
         expect(s.result).not.toBeNull();
         expect(s.turnCount).toBeLessThanOrEqual(MAX_TURNS + n);
         // 整合性: 駒の重複なし、領域のセル総数 81
+        for (let p = 0; p < n; p++) { // 全モード共通: 各プレイヤーは 〇1 + □1 の計2駒のみ
+          const mine = s.pieces.filter((x) => x.owner === p);
+          expect(mine.map((x) => x.kind).sort()).toEqual(['circle', 'square']);
+        }
         const cells = new Set(s.pieces.map((p) => p.pos.y * 9 + p.pos.x));
         expect(cells.size).toBe(s.pieces.length);
         expect(computeRegions(s).reduce((a, r) => a + r.cells.length, 0)).toBe(81);
