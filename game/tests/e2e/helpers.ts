@@ -44,7 +44,8 @@ export async function loadFixture(page: Page, json: string): Promise<void> {
 }
 
 export const getState = (page: Page): Promise<GameState> => page.evaluate(() => (window as unknown as { __HANG__: H }).__HANG__.getState());
-export const waitIdle = (page: Page) => page.waitForFunction(() => !(window as unknown as { __HANG__: H }).__HANG__.isBusy(), undefined, { timeout: 30_000 });
+/** アニメ(入力ロック)とカメラ移動の完了を待つ */
+export const waitIdle = (page: Page) => page.waitForFunction(() => { const h = (window as unknown as { __HANG__: H }).__HANG__; return !h.isBusy() && !h.getCamera().moving; }, undefined, { timeout: 30_000 });
 
 export async function tapAt(page: Page, p: { x: number; y: number }): Promise<void> {
   if (test.info().project.name.startsWith('mobile')) await page.touchscreen.tap(p.x, p.y);

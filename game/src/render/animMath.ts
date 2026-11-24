@@ -5,6 +5,8 @@ export const WALL_RISE_MS = 250;
 export const WALL_BREAK_MS = 300;
 export const PLACE_DROP_MS = 300;
 export const TURN_BANNER_MS = 900;
+/** スマホ表示でのカメラ移動(斜め俯瞰 ⇄ 真上) */
+export const CAMERA_MOVE_MS = 1200;
 export const HOP_HEIGHT = 0.15;
 
 const clamp01 = (t: number) => (t < 0 ? 0 : t > 1 ? 1 : t);

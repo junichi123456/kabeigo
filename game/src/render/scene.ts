@@ -1,10 +1,11 @@
 import * as THREE from 'three';
-import { createCamera, fitCamera } from './camera';
+import { CameraRig, createCamera } from './camera';
 
 export interface Stage {
   renderer: THREE.WebGLRenderer;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
+  rig: CameraRig;
   canvas: HTMLCanvasElement;
   onFrame(cb: (now: number) => void): void;
   resize(): void;
@@ -40,13 +41,14 @@ export function createStage(wrap: HTMLElement): Stage {
   scene.add(sun);
 
   const camera = createCamera();
-  const cbs: ((now: number) => void)[] = [];
+  const rig = new CameraRig(camera);
+  const cbs: ((now: number) => void)[] = [(now) => rig.update(now)];
   let raf = 0, running = true;
 
   const resize = () => {
     const w = Math.max(1, wrap.clientWidth), h = Math.max(1, wrap.clientHeight);
     renderer.setSize(w, h, false);
-    fitCamera(camera, w / h);
+    rig.setAspect(w / h);
   };
   const ro = new ResizeObserver(resize);
   ro.observe(wrap);
@@ -66,7 +68,7 @@ export function createStage(wrap: HTMLElement): Stage {
   document.addEventListener('visibilitychange', vis);
 
   return {
-    renderer, scene, camera, canvas,
+    renderer, scene, camera, rig, canvas,
     onFrame: (cb) => { cbs.push(cb); },
     resize,
     dispose: () => {

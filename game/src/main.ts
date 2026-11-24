@@ -31,8 +31,8 @@ function ensureRuntime(): boolean {
   stage.scene.add(view.root);
   const picker = new Picker(stage.camera, stage.canvas);
   stage.onFrame((now) => { animator.tick(now); view.tick(now); });
-  ctrl = new Controller(view, picker, animator, hud, result, stage.canvas);
-  if (hooksEnabled()) installHooks(ctrl, picker, animator, (s) => enterGame(() => ctrl!.loadState(s)));
+  ctrl = new Controller(view, picker, animator, hud, result, stage.canvas, stage.rig);
+  if (hooksEnabled()) installHooks(ctrl, picker, animator, stage.rig, (s) => enterGame(() => ctrl!.loadState(s)));
   return true;
 }
 

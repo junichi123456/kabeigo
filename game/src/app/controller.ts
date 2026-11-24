@@ -9,6 +9,8 @@ import type { Picker } from '../render/picking';
 import type { Hud } from '../ui/hud';
 import type { ResultScreen } from '../ui/resultScreen';
 import { TURN_BANNER_MS } from '../render/animMath';
+import type { CameraRig } from '../render/camera';
+import { isMobileView } from './device';
 
 const sameCell = (a: Cell | null, b: Cell | null) => !!a && !!b && a.x === b.x && a.y === b.y;
 
@@ -25,7 +27,7 @@ export class Controller {
 
   constructor(
     private view: BoardView, private picker: Picker, private animator: Animator, private hud: Hud,
-    private result: ResultScreen, canvas: HTMLCanvasElement,
+    private result: ResultScreen, canvas: HTMLCanvasElement, private rig: CameraRig,
   ) {
     let down: { x: number; y: number; id: number } | null = null;
     canvas.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, id: e.pointerId }; });
@@ -65,11 +67,18 @@ export class Controller {
     this.view.sync(s);
     this.view.updateTerritory(s, s.phase === 'finished');
     this.refresh();
+    this.cameraForTurn();
     if (s.phase === 'finished') this.result.show(s);
     else if (banner) this.showTurnBanner(s.currentPlayer);
   }
 
-  stop(): void { this.active = false; this.playing = false; this.result.hide(); }
+  stop(): void { this.active = false; this.playing = false; this.result.hide(); this.rig.setMode('oblique', false); }
+
+  /** スマホ表示では、手番の間は真上からの見下ろし(1.2 秒で移動)。終局後は斜め俯瞰に戻す。 */
+  private cameraForTurn(): void {
+    const top = isMobileView() && this.state.phase !== 'finished';
+    this.rig.setMode(top ? 'top' : 'oblique');
+  }
 
   /* ---------- 入力 ---------- */
   private onTap(cx: number, cy: number): void {
@@ -135,6 +144,7 @@ export class Controller {
     this.view.updateTerritory(next, next.phase === 'finished');
     this.playing = false;
     this.refresh();
+    this.cameraForTurn();
     for (const e of events) {
       if (e.type === 'playerSkipped') this.hud.toast(`${next.config.playerNames[e.player]}はスキップ(確定済み)`);
       if (e.type === 'turnPassed') this.hud.toast(`${next.config.playerNames[e.player]}は動けないためパス`);

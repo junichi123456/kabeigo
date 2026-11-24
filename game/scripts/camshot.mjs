@@ -1,0 +1,13 @@
+import { chromium } from '@playwright/test';
+const [w, h, out, touch] = process.argv.slice(2);
+const b = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const p = await (await b.newContext({ viewport: { width: +w, height: +h }, isMobile: touch === '1', hasTouch: touch === '1', deviceScaleFactor: 1, serviceWorkers: 'block' })).newPage();
+await p.goto('http://localhost:4173/?test=1');
+await p.click('[data-testid="start-button"]');
+await p.waitForTimeout(600);
+await p.screenshot({ path: `test-results/screens/cam-${out}-mid.png` });
+await p.waitForFunction(() => !window.__HANG__.getCamera().moving, undefined, { timeout: 20000 });
+await p.waitForTimeout(500);
+console.log(out, JSON.stringify(await p.evaluate(() => window.__HANG__.getCamera())), JSON.stringify(await p.evaluate(() => window.__HANG__.lastAnimations().filter((a) => a.kind === 'camera'))));
+await p.screenshot({ path: `test-results/screens/cam-${out}.png` });
+await b.close();
