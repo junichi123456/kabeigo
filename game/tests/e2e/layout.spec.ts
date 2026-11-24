@@ -12,7 +12,7 @@ test('E11 layout: board fits, HUD does not overlap canvas, no page scroll', asyn
       const hk = (window as unknown as { __HANG__: import('../../src/testHooks').HangTestHooks }).__HANG__;
       const box = (sel: string) => { const r = document.querySelector(sel)!.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
       return {
-        corners: hk.getBoardCorners(), canvas: box('canvas'), hud: box('[data-testid="hud"]'), confirm: box('[data-testid="confirm-button"]'),
+        corners: hk.getBoardCorners(), canvas: box('canvas'), hud: box('[data-testid="hud"]'), confirm: box('[data-testid="confirm-button"]'), cancel: box('[data-testid="cancel-button"]'),
         sw: document.documentElement.scrollWidth, iw: window.innerWidth, sh: document.documentElement.scrollHeight, ih: window.innerHeight,
       };
     });
@@ -33,6 +33,11 @@ test('E11 layout: board fits, HUD does not overlap canvas, no page scroll', asyn
     const cx = (info.confirm.l + info.confirm.r) / 2, canvasCx = (info.canvas.l + info.canvas.r) / 2;
     expect(Math.abs(cx - canvasCx), `confirm centered ${tag}`).toBeLessThan(6);
     expect(info.confirm.t).toBeGreaterThanOrEqual(info.canvas.b - 1);
+    // 確定・キャンセルがビューポート内に収まり、折り返しで巨大化していない
+    expect(info.confirm.b, `confirm inside viewport ${tag}`).toBeLessThanOrEqual(info.ih);
+    expect(info.confirm.r - info.confirm.l, `confirm width ${tag}`).toBeGreaterThanOrEqual(140);
+    expect(info.confirm.b - info.confirm.t, `confirm height ${tag}`).toBeLessThanOrEqual(100);
+    expect(info.cancel.b - info.cancel.t, `cancel height ${tag}`).toBeLessThanOrEqual(60);
     await page.screenshot({ path: `test-results/screens/layout-${tag}-${test.info().project.name}.png` });
   }
 });
