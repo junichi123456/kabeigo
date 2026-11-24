@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#1F2A36" />
+  <link rel="icon" href="./icons/icon-192.png" />
+  <title>カベガコイ</title>
+</head>
+<body>
+  <div id="app">
+    <section id="title-screen" data-testid="title-screen">
+      <div class="title-card">
+        <h1>カベガコイ</h1>
+        <p class="sub">壁囲碁アレンジ ― 海賊船の卓上で</p>
+        <div class="seg" role="group" aria-label="人数">
+          <button type="button" data-testid="player-count-2">2人</button>
+          <button type="button" data-testid="player-count-3">3人</button>
+        </div>
+        <div id="name-inputs"></div>
+        <button type="button" class="primary" data-testid="start-button">ゲーム開始</button>
+        <button type="button" class="ghost" data-testid="rules-button">ルール</button>
+      </div>
+    </section>
+
+    <section id="game-screen" hidden>
+      <aside id="hud" data-testid="hud">
+        <div class="hud-top">
+          <div class="current"><span class="chip" id="hud-chip"></span><span data-testid="hud-current-player" id="hud-current-player"></span></div>
+          <div class="hud-menu">
+            <button type="button" id="menu-button" data-testid="menu-button" aria-label="メニュー">☰</button>
+            <div id="menu-popup" hidden>
+              <button type="button" data-testid="menu-rules">ルール</button>
+              <button type="button" data-testid="menu-title">タイトルへ戻る</button>
+            </div>
+          </div>
+        </div>
+        <div id="hud-phase" data-testid="hud-phase" class="phase"></div>
+        <div id="hud-scores" class="scores"></div>
+        <div id="hud-turn" data-testid="hud-turn" class="turn"></div>
+      </aside>
+      <main id="stage">
+        <div id="canvas-wrap"></div>
+        <div id="actionbar">
+          <button type="button" id="cancel-button" data-testid="cancel-button">キャンセル</button>
+          <button type="button" id="confirm-button" data-testid="confirm-button" disabled>確定</button>
+          <span></span>
+        </div>
+        <div id="turn-banner" data-testid="turn-banner" aria-live="polite"></div>
+        <div id="toast" data-testid="toast"></div>
+        <div id="no-webgl" hidden>この端末は3D表示に対応していません</div>
+      </main>
+    </section>
+
+    <div id="result-screen" data-testid="result-screen" hidden>
+      <button type="button" id="result-toggle" data-testid="result-toggle">盤面を見る</button>
+      <div class="result-panel">
+        <h2 data-testid="result-winner" id="result-winner"></h2>
+        <p id="result-note" class="note"></p>
+        <table id="result-table"><thead><tr><th>順位</th><th>名前</th><th>支配マス</th><th>1コマあたり</th></tr></thead><tbody></tbody></table>
+        <div class="result-buttons">
+          <button type="button" class="primary" data-testid="restart-button">もう一度</button>
+          <button type="button" class="ghost" data-testid="to-title-button">タイトルへ</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="rules-modal" class="modal" data-testid="rules-modal" hidden>
+      <div class="modal-card">
+        <h2>ルール</h2>
+        <div id="rules-body"></div>
+        <button type="button" class="primary" data-testid="rules-close">閉じる</button>
+      </div>
+    </div>
+
+    <div id="confirm-quit" class="modal" data-testid="confirm-quit" hidden>
+      <div class="modal-card small">
+        <p>対局を終了してタイトルへ戻りますか?</p>
+        <div class="result-buttons">
+          <button type="button" class="primary" data-testid="quit-yes">戻る</button>
+          <button type="button" class="ghost" data-testid="quit-no">続ける</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
