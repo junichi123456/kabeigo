@@ -57,6 +57,7 @@ export class HighlightView {
   private place = new CellOverlay(81, 0.9, 0.01, '#ffffff', 0.22);
   private normal = new CellOverlay(16, 0.9, 0.014, '#7CFC00', 0.45);
   private brk = new CellOverlay(16, 0.9, 0.014, '#FF9800', 0.55);
+  private brkMark = new CellOverlay(16, 0.32, 0.02, '#ffffff', 0.95); // 壁破りの移動先に白い目印(色覚に依存しない)
   private sel = new CellOverlay(1, 0.96, 0.018, '#ffffff', 0.5);
   private rings: THREE.Mesh[] = [];
   private pathBoxes: THREE.Mesh[] = [];
@@ -71,7 +72,7 @@ export class HighlightView {
   private hasBreak = false;
 
   constructor() {
-    this.root.add(this.place.mesh, this.normal.mesh, this.brk.mesh, this.sel.mesh, this.breakBox);
+    this.root.add(this.place.mesh, this.normal.mesh, this.brk.mesh, this.brkMark.mesh, this.sel.mesh, this.breakBox);
     this.breakBox.visible = false;
   }
 
@@ -86,6 +87,7 @@ export class HighlightView {
     this.place.set(o.placeCells);
     this.normal.set(o.targets);
     this.brk.set(o.breakTargets);
+    this.brkMark.set(o.breakTargets);
     this.sel.set(o.selTarget ? [o.selTarget] : o.selCell ? [o.selCell] : []);
     // リング
     while (this.rings.length < o.movable.length) {

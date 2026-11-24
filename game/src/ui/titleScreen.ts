@@ -25,7 +25,7 @@ export class TitleScreen {
 
   private render(): void {
     const n = this.settings.playerCount;
-    for (const k of [2, 3] as const) $(`player-count-${k}`).classList.toggle('on', k === n);
+    for (const k of [2, 3] as const) { const b = $(`player-count-${k}`); b.classList.toggle('on', k === n); b.setAttribute('aria-pressed', String(k === n)); }
     const box = document.getElementById('name-inputs')!;
     box.replaceChildren();
     this.inputs = [];

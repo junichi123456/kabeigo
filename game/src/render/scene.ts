@@ -26,6 +26,8 @@ export function createStage(wrap: HTMLElement): Stage {
   renderer.shadowMap.type = THREE.PCFShadowMap;
   const canvas = renderer.domElement;
   canvas.dataset.testid = 'game-canvas';
+  canvas.setAttribute('role', 'img');
+  canvas.setAttribute('aria-label', '対局盤面(3D)。操作は画面下の確定ボタンとHUDの案内に従ってください');
   canvas.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;';
   wrap.appendChild(canvas);
 

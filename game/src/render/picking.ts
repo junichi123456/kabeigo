@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import type { Cell, Edge } from '../logic/types';
+import { nearestEdgeTo } from '../app/hitTest';
 
 export const cellToWorld = (c: Cell): THREE.Vector3 => new THREE.Vector3(c.x - 4, 0, c.y - 4);
-export const edgeMid = (e: Edge): { x: number; z: number } =>
-  e.o === 'H' ? { x: e.x - 4, z: e.y - 4 + 0.5 } : { x: e.x - 4 + 0.5, z: e.y - 4 };
+export { edgeMid } from '../app/hitTest';
 
 const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
@@ -26,17 +26,10 @@ export class Picker {
     return x >= 0 && x < 9 && y >= 0 && y < 9 ? { x, y } : null;
   }
 
-  /** 候補辺のうちタップ位置に最も近いもの(距離 0.9 以内) */
+  /** 候補辺のうちタップ位置に最も近いもの(スナップ半径は hitTest.EDGE_SNAP_RADIUS) */
   nearestEdge(clientX: number, clientY: number, edges: Edge[]): Edge | null {
     const g = this.groundPoint(clientX, clientY);
-    if (!g) return null;
-    let best: Edge | null = null, bd = 0.9;
-    for (const e of edges) {
-      const m = edgeMid(e);
-      const d = Math.hypot(m.x - g.x, m.z - g.z);
-      if (d <= bd) { bd = d; best = e; }
-    }
-    return best;
+    return g ? nearestEdgeTo(g, edges) : null;
   }
 
   /** ワールド → ページ座標(CSS px) */

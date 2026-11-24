@@ -119,3 +119,21 @@ button.ghost { background: transparent; border: 1px solid #8a6a45; }
 .modal-card h2 { margin: 0; color: var(--gold); }
 #rules-body ul { margin: 0; padding-left: 1.2em; line-height: 1.55; font-size: .95em; }
 #rules-body svg { max-width: 100%; height: auto; background: #3b2a1c; border-radius: 8px; margin: 6px 6px 0 0; }
+
+/* ---- アクセシビリティ ---- */
+/* タップ領域: 主要な操作は 44px 以上(WCAG 2.5.5 / Apple HIG) */
+button { min-height: 44px; min-width: 44px; }
+#menu-button { min-height: 44px; min-width: 44px; padding: 6px 14px; }
+#cancel-button { min-height: 44px; }
+.seg button { min-height: 48px; }
+#name-inputs input { min-height: 44px; }
+#menu-popup button { min-height: 44px; }
+/* キーボード・スイッチ操作用のフォーカス表示 */
+button:focus-visible, input:focus-visible { outline: 3px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 5px #1E88E5; }
+/* 動きを減らす設定: 明滅・バウンスを止め、静的な強調に置き換える */
+@keyframes banner-fade { 0%, 100% { opacity: 0; } 15%, 85% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  #confirm-button:not(:disabled) img { animation: none; filter: sepia(1) saturate(7) hue-rotate(-8deg) brightness(1.2) drop-shadow(0 0 10px #ffe082); }
+  #confirm-button.break:not(:disabled) img { animation: none; filter: sepia(1) saturate(9) hue-rotate(-38deg) brightness(1.2) drop-shadow(0 0 10px #ffb74d); }
+  #turn-banner .b { animation: banner-fade .9s linear both; }
+}

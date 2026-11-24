@@ -24,9 +24,13 @@ export function makeWall(e: Edge, v: WallValue): THREE.Mesh {
   return m;
 }
 
+const ghostH = new THREE.BoxGeometry(1.04, 0.5, 0.26);
+const ghostV = new THREE.BoxGeometry(0.26, 0.5, 1.04);
+
+/** ゴースト壁は実壁(厚さ 0.12)より太く描き、真上表示でも見つけやすくする */
 export function makeGhostWall(e: Edge, color: string): THREE.Mesh {
   const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.35, depthWrite: false });
-  const m = new THREE.Mesh(e.o === 'H' ? hGeo : vGeo, mat);
+  const m = new THREE.Mesh(e.o === 'H' ? ghostH : ghostV, mat);
   const mid = edgeMid(e);
   m.position.set(mid.x, 0.25, mid.z);
   return m;

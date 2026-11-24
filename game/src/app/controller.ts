@@ -11,6 +11,7 @@ import type { ResultScreen } from '../ui/resultScreen';
 import { TURN_BANNER_MS } from '../render/animMath';
 import type { CameraRig } from '../render/camera';
 import { isMobileView } from './device';
+import { isTap, snapCell } from './hitTest';
 
 const sameCell = (a: Cell | null, b: Cell | null) => !!a && !!b && a.x === b.x && a.y === b.y;
 
@@ -33,9 +34,10 @@ export class Controller {
     canvas.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, id: e.pointerId }; });
     canvas.addEventListener('pointerup', (e) => {
       if (!down || down.id !== e.pointerId) return;
-      const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+      const d = down;
       down = null;
-      if (moved <= 10) this.onTap(e.clientX, e.clientY);
+      // タッチ・ペンは指のブレを大きめに許容(hitTest.TAP_SLOP_TOUCH)
+      if (isTap(e.clientX - d.x, e.clientY - d.y, e.pointerType)) this.onTap(e.clientX, e.clientY);
     });
     canvas.addEventListener('pointercancel', () => { down = null; });
     document.getElementById('confirm-button')!.addEventListener('click', () => this.onConfirm());
@@ -90,16 +92,19 @@ export class Controller {
       if (sameCell(this.sel.cell, cell)) { void this.onConfirm(); return; }
       this.sel.cell = cell; this.refresh();
     } else if (s.phase === 'move') {
-      const cell = this.picker.cellAt(cx, cy);
+      const g = this.picker.groundPoint(cx, cy);
+      if (!g) { this.clearSel(); this.refresh(); return; }
+      // 移動先と動かせる駒を候補にし、境界付近のタップは最寄りの候補へ吸着させる(細かいタップ対策)
+      const movable = movablePieceIds(s);
+      const pieceCells = s.pieces.filter((p) => p.owner === s.currentPlayer && movable.includes(p.id)).map((p) => p.pos);
+      const targetCells = this.sel.pieceId ? this.reps.map((m) => m.path[m.path.length - 1]!) : [];
+      const cell = snapCell(g, [...targetCells, ...pieceCells]);
       if (!cell) { this.clearSel(); this.refresh(); return; }
-      if (this.sel.pieceId) {
-        const rep = this.reps.find((m) => sameCell(m.path[m.path.length - 1]!, cell));
-        if (rep) {
-          if (sameCell(this.sel.target, cell)) { void this.onConfirm(); return; }
-          this.sel.target = cell; this.refresh(); return;
-        }
+      if (this.sel.pieceId && targetCells.some((c) => sameCell(c, cell))) {
+        if (sameCell(this.sel.target, cell)) { void this.onConfirm(); return; }
+        this.sel.target = cell; this.refresh(); return;
       }
-      const own = s.pieces.find((p) => p.owner === s.currentPlayer && sameCell(p.pos, cell) && movablePieceIds(s).includes(p.id));
+      const own = s.pieces.find((p) => p.owner === s.currentPlayer && sameCell(p.pos, cell) && movable.includes(p.id));
       if (own) {
         this.sel = { pieceId: own.id, target: null, edge: null, cell: null };
         this.reps = representativeMoves(legalMovesForPiece(s, own.id));
